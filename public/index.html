@@ -1,0 +1,71 @@
+<html>
+    <body>
+        <div id="logindiv">
+            <button onclick="login()">
+                Login By Ajor
+            </button>
+        </div>
+        <div id="gamediv"> 
+            Game
+        </div>
+        <script>
+            
+            function callApi(url ) {
+                return new Promise((res,rej)=>{
+                    const xhttp = new XMLHttpRequest();
+                    xhttp.onload = function() { 
+                        if(this.status==403)
+                        {
+                            window.localStorage.setItem('token','')
+                            rej(this.responseText)
+                        }
+                        if(this.responseText)
+                        {
+                            var resp=JSON.parse(this.responseText)
+                            if(resp.token)
+                            {
+                                window.localStorage.setItem('token',resp.token)
+                            }
+                            res( resp.data);
+    
+                        } 
+                    }
+                    xhttp.open("GET",url);
+                    if(window.localStorage.token)
+                        xhttp.setRequestHeader('authorization',window.localStorage.token)
+                    xhttp.send();
+
+                })
+            }
+            if(window.localStorage.token)
+            {
+                document.getElementById('logindiv').style.display='none'
+                document.getElementById('gamediv').style.display=''
+            }
+            else
+            {
+                document.getElementById('logindiv').style.display=''
+                document.getElementById('gamediv').style.display='none'
+            }
+            
+            async function stayLogin(loginId)
+            {   
+                let id= await callApi('https://vaapi.ajor.io/api/stayToLogin?loginId='+loginId)  
+                 await callApi('/auth/loginByAjor?id='+id)  
+                 window.location.reload()
+            }
+            async function login()
+            {
+
+                let loginId = await callApi('/auth/requestLoginToken') 
+                stayLogin(loginId)
+                await callApi('https://vaapi.ajor.io/api/stayToLoginSubmit?loginId='+loginId) 
+                window.open('https://ajor.io/tva-login?id='+loginId)
+            }
+        </script>
+
+        <script>
+            
+        </script>
+    </body>
+</html>

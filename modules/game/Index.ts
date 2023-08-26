@@ -7,6 +7,7 @@ import GameModel from "./models/GameModel";
 import PlayerModel from "./models/PlayerModel";
 import { GameState } from "./models/GameState";
 import ConnectionManager from "./services/ConnectionManager";
+import GameManager from "./services/GameManager";
 const uuid=require('uuid');
 @OriInjectable({domain:'game'})
 export default class GameService implements PackageIndex
@@ -18,8 +19,21 @@ export default class GameService implements PackageIndex
         DbSchemas.init(config.dbContext,config.redisContext)
         return ;
     }
-    start(): Promise<void> {
-        return;
+    async start(): Promise<void> {
+        let games=await DbSchemas.games.search().find();
+        for(let game of games.value)
+        {
+            if(game.state==GameState.Finished)
+            {
+                await DbSchemas.games.findByIdAndDelete(game._id);
+            }
+            else if(game.state==GameState.Playing || game.state==GameState.TurnChanging|| game.state==GameState.Puase)
+            {
+                game.state=GameState.Playing;
+                GameManager.start(game)
+            }
+            
+        }
     }
     restart(): Promise<void> {
         return;
@@ -36,12 +50,37 @@ export default class GameService implements PackageIndex
     }
  
     @OriService({})
-    async startGame(@SessionInput session:SessionModel)
+    async rool(@SessionInput session:SessionModel)
     {
-
+        return await GameManager.rool(session.userid);
     }
     @OriService({})
-    async Join(@SessionInput session:SessionModel,id:string)
+    async stopTurn(@SessionInput session:SessionModel)
+    {
+        return await GameManager.stop(session.userid);
+    }
+    @OriService({})
+    async ignore(@SessionInput session:SessionModel)
+    {
+        return await GameManager.ignore(session.userid);
+    }
+    @OriService({})
+    async select(@SessionInput session:SessionModel,dice0:number,dice1:number)
+    {
+        return await GameManager.select(session.userid,[dice0,dice1]);
+    }
+    @OriService({})
+    async startGame(@SessionInput session:SessionModel,id:string)
+    {
+        let game=await DbSchemas.games.findById(id);
+        if(!game || game.players[game.turn].userid!=session.userid || game.state!=GameState.Waiting)
+        {
+            return;
+        }
+        return await GameManager.start(game);
+    }
+    @OriService({})
+    async join(@SessionInput session:SessionModel,id:string)
     {
         let existGame=await DbSchemas.games.search({where:{'players.userid':session.userid}}).findOne();
         if(existGame)
@@ -63,7 +102,7 @@ export default class GameService implements PackageIndex
         }
         game.players.push(new PlayerModel({userid:session.userid}))
         await DbSchemas.games.saveById(game);
-        return game._id;
+        return game;
     }
     @OriService({})
     async createGame(@SessionInput session:SessionModel)
@@ -74,11 +113,12 @@ export default class GameService implements PackageIndex
             return
         }
         let id=uuid.v4();
-        await DbSchemas.games.saveById(new GameModel({
+        let game=new GameModel({
             _id:id,
             players:[new PlayerModel({userid:session.userid})]
-        }))
-        return id;
+        })
+        await DbSchemas.games.saveById(game)
+        return game;
 
     }
     @OriService({isEvent:true})

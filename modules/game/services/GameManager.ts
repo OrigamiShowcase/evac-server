@@ -52,6 +52,7 @@ export default class GameManager
     }
     static async start(game:GameModel)
     {
+        if(this.games.has(game._id))return
         this.games.set(game._id,game);
         for(let player of game.players)
             this.userids.set(player.userid,game._id);
@@ -71,6 +72,38 @@ export default class GameManager
         for(let i=0;i<4;i++)
         {
             game.dices.push(CommonService.random(1,6)) 
+        }
+        let palyer=game.players[game.turn];
+        if(palyer.meeples.length>=3)
+        {
+            let canplay=false;
+            for(let i=0;i<4;i++)
+            {
+                for(let j=0;j<4;j++)
+                {
+                    if(i!=j)
+                    {
+                        let sum= game.dices[i]+game.dices[j];
+                        if(palyer.meeples.filter(p=>p.index==sum)[0])
+                        {
+                            canplay=true
+                        }
+                    }
+                }
+            }
+            if(!canplay)
+            {
+                game.state=GameState.TurnChanging;
+                setTimeout(()=>{
+                    game.turn++;
+                    if(game.turn>=game.players.length)game.turn=0;
+                    game.dices=[]
+                    game.players[game.turn].meeples=[]
+                    this.saveGame(game);
+                    game.sendMessage(ResponseType.Turn)
+                    game.state=GameState.Playing;
+                },5000)
+            }
         }
         this.saveGame(game);
         game.sendMessage(ResponseType.Rool)
@@ -97,6 +130,7 @@ export default class GameManager
             if(this.board.get(meeple.index)==meeple.value)
             {
                 game.locks.push(meeple.index);
+                game.players[game.turn].winIndex??=[]
                 game.players[game.turn].winIndex.push(meeple.index)
                 if(game.players[game.turn].winIndex.length>=3)
                 {
@@ -110,6 +144,7 @@ export default class GameManager
                 }
             }
         }
+        game.players[game.turn].meeples=[]
         game.turn++;
         if(game.turn>=game.players.length)game.turn=0;
         game.state=GameState.Playing;
@@ -143,8 +178,8 @@ export default class GameManager
         if(meeples.length>=3)
         {
             if(index==-1)return;
-            
-            if(this.board.get(sum)>meeples[index].value+1)
+            let test=this.board.get(sum)
+            if(this.board.get(sum)< meeples[index].value+1)
             {
                 return;
             }
@@ -154,7 +189,7 @@ export default class GameManager
         {
             if(index>-1)
             {
-                if(this.board.get(sum)>meeples[index].value+1)
+                if(this.board.get(sum)< meeples[index].value+1)
                 {
                     return;
                 }

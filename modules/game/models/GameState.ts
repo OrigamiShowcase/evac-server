@@ -3,5 +3,6 @@ export enum GameState
     Waiting=1,
     Playing=2,
     TurnChanging=3,
-    Finished=4,
+    Puase=4,
+    Finished=5,
 }

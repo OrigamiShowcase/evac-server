@@ -51,6 +51,7 @@ export default class AuthService implements PackageIndex
             id
         },null,null);        
         var accountData=request.data; 
+        if(!accountData.account) throw 'access'
         return  new RouteResponse({
             session: {
                 'userid':accountData.account

@@ -6,10 +6,244 @@
             </button>
         </div>
         <div id="gamediv"> 
-            Game
-        </div>
-        <script>
+            <div id="creatediv">
+                <input id="codeinput"/>
+                <button onclick="joinGame()" >Join</button>
+
+                <button onclick="createGame()" >Create</button>
+
+            </div> 
             
+            <div id="playdiv">
+                Game
+                <div id="playerdiv">
+
+                </div>
+                <div id="actiondiv">
+
+                    <button id="startbtn" onclick="startGame()">Start</button>
+                    <button id="roolbtn" onclick="rool()">Rool</button>
+                    <button id="stopbtn" onclick="stop()">Stop</button>
+                </div>
+                <div>
+                    <button id="dicebtn0" onclick="selectDice(0)"></button>
+                    <button id="dicebtn1" onclick="selectDice(1)"></button>
+                    <button id="dicebtn2" onclick="selectDice(2)"></button>
+                    <button id="dicebtn3" onclick="selectDice(3)"></button>
+                    <button id="selectbtn" onclick="select()">Select</button>
+                    <button id="ignorebtn" onclick="ignore()">Ignore</button>
+                </div>
+                <div id="boarddiv">
+
+                </div>
+            </div>
+        </div>
+        <style>
+            .lock
+            {
+                background: red;
+            }
+            .meeple
+            {
+                width: 25px;
+            }
+            table,td
+            {
+                border-style: solid;
+            }
+            .player-select
+            {
+                background-color: cornflowerblue;
+            }
+            .player-bix 
+            {
+                border-style: solid;
+                width: 150px;
+            }
+        </style>
+        <script>
+            var baseUrl='ws://evacsocket.positroneco.com';
+            // var baseUrl='ws://localhost:4001';
+            function showElement(name)
+            {
+                document.getElementById(name).style.display=''
+            }
+            function hideElement(name)
+            {
+                document.getElementById(name).style.display='none'
+            }
+        </script>
+        <script>
+            var profile={};
+            var selectedDice=[]
+            var game;
+            var boardData=[
+                [2,3],
+                [3,5],
+                [4,7],
+                [5,9],
+                [6,11],
+                [7,13],
+                [8,11],
+                [9,9],
+                [10,7],
+                [11,5],
+                [12,3] 
+            ]
+            function loadBoard()
+            {
+                let str='<table>'
+                str+='<tr>'
+                let player=game.players[game.turn].meeples
+                let ships=game.players[game.turn].ships
+                for(let i=player.length;i<3;i++)
+                {
+                    str+='<img src="images/meeple.png" class="meeple" />'
+
+                }
+                str+='</tr>'
+                for(let row of boardData)
+                {
+                        if(game.locks.indexOf(row[0])>-1)
+                        {
+
+                            str+='<tr class="lock">'
+                        }
+                        else
+                        {
+                            str+='<tr>'
+
+                        }
+                        for(let col=0;col< row[1];col++)
+                        {
+                            str+='<td>'
+                            str+=row[0]
+                            let find=player.filter(p=>p.index==row[0])[0]
+                            if(find && find.value==col+1)
+                            {
+                                str+='<img src="images/meeple.png" class="meeple" />'
+                            }
+                            let ship=ships.filter(p=>p.index==row[0])[0]
+                            if(ship && ship.value==col+1)
+                            {
+                                str+='<img src="images/ship.png" class="meeple" />'
+                            }
+                            str+='</td>'
+                        }
+                    str+='</tr>'
+                }
+                str+='</table>'
+                document.getElementById('boarddiv').innerHTML=str
+            }
+            function reloadElements()
+            {
+                if(window.localStorage.token)
+                {
+                    showElement('gamediv')
+                    hideElement('logindiv') 
+                    if(!game)
+                    {
+                        showElement('creatediv')
+                        hideElement('playdiv')
+                    }
+                    else
+                    {
+                        if(game.players[game.turn].userid==profile.userid)
+                        {
+                            showElement('actiondiv')
+                        }
+                        else
+                        {
+                            hideElement('actiondiv')
+                        }
+                        showElement('playdiv')
+                        hideElement('creatediv') 
+                        hideElement('startbtn') 
+                        if(game.state==1 && game.players.length>1)
+                        {
+                            showElement('startbtn') 
+                        }
+                        if(game.dices.length==0 )
+                        {
+                            showElement('roolbtn') 
+                            showElement('stopbtn') 
+                        }
+                        else
+                        {
+                            hideElement('roolbtn') 
+                            hideElement('stopbtn') 
+                        }
+                    }
+                }
+                else
+                {
+                    showElement('logindiv')
+                    hideElement('gamediv')  
+                } 
+            }
+            
+            function reloadGame(newModel)
+            {
+                if(!newModel)
+                {
+                    game=newModel
+                    return
+                }
+                if(newModel )
+                {
+                    let str=newModel._id+ '<br/>'
+                    for(let i=0;i< newModel.players.length;i++)
+                    {
+                        let player=newModel.players[i]
+                        if(newModel.turn==i)
+                        {
+                            str+='<div class="player-bix player-select"> '+player.userid+'(turn)'
+                        }
+                        else
+                        {
+                            str+='<div class="player-bix">'+player.userid
+                        }
+                        if(player.winIndex)
+                        {
+                            str+= JSON.stringify(player.winIndex) 
+                        }
+                        str+= ' </div>'
+                    } 
+                    document.getElementById('playerdiv').innerHTML=str;
+                } 
+
+                game=newModel;
+                if(game)
+                {
+                    let str='';
+                    for(let i=0;i<4;i++)
+                    {
+                        
+                        name='dicebtn'+i
+                        if(game.dices[i])
+                        {
+                            showElement(name)
+                            document.getElementById(name).innerHTML=game.dices[i]
+                        }
+                        else
+                        {
+                            hideElement(name)
+                        }
+                    } 
+                        showElement('selectbtn')
+                        showElement('ignorebtn')
+                    if(game.dices.length==0)
+                    {
+                        hideElement('selectbtn')
+                    }
+                    if(game.dices.length!=2)
+                    {
+                        hideElement('ignorebtn')
+                    }
+                }
+                loadBoard()
+                reloadElements()
+            }
             function callApi(url ) {
                 return new Promise((res,rej)=>{
                     const xhttp = new XMLHttpRequest();
@@ -37,16 +271,7 @@
 
                 })
             }
-            if(window.localStorage.token)
-            {
-                document.getElementById('logindiv').style.display='none'
-                document.getElementById('gamediv').style.display=''
-            }
-            else
-            {
-                document.getElementById('logindiv').style.display=''
-                document.getElementById('gamediv').style.display='none'
-            }
+            reloadElements()
             
             async function stayLogin(loginId)
             {   
@@ -62,10 +287,169 @@
                 await callApi('https://vaapi.ajor.io/api/stayToLoginSubmit?loginId='+loginId) 
                 window.open('https://ajor.io/tva-login?id='+loginId)
             }
+            async function loadProfile()
+            {
+                
+                profile= await callApi('/auth/isLogin') 
+                console.log('>>>>>>>>>>',profile);
+                reloadElements()
+            }
+            loadProfile()
         </script>
-
         <script>
             
+            var name;
+            var id=2;
+            var token=window.localStorage.token;
+            if(token)
+            {
+                const client = new WebSocket(baseUrl, 'echo-protocol');
+                var temp={};
+                function callApiSocket(domain,service,param,callBack) {
+                    id++;
+                    if(callBack)
+                    {
+                        temp[id.toString()]={callBack}
+                        client.send(JSON.stringify({domain,service,param,id,token})); 
+                    }
+                    else
+                    {
+                        return new Promise((res,rej)=>{
+                            temp[id.toString()]={res,rej}
+                            client.send(JSON.stringify({domain,service,param,id,token})); 
+                        })                    
+                    }
+                } 
+                async function connectToServer()
+                {
+                    let newModel= await callApiSocket('game','getGame',{}) 
+                    reloadGame(newModel)
+                    reloadElements()
+                    if(!game)
+                    { 
+                    }
+                    else
+                    { 
+                        callApiSocket('game','listen',{},(data)=>{
+                            let dt=data.data.response.data
+                            console.log('event:',dt.game); 
+                            reloadGame(dt.game) 
+                        })
+                    }
+                }
+                client.addEventListener('open', async function (event) { 
+                    await connectToServer()
+                });
+                client.addEventListener('message', function (event) {
+                    var data=JSON.parse(event.data) ; 
+                    var id=data.id.toString();
+                    if(data.session?.token)
+                    {
+                        token=data.session?.token;
+                    }
+                    if(temp[id])
+                    {
+                        if(temp[id].callBack)
+                        {
+                            temp[id].callBack(data)
+                        }
+                        else
+                        {
+                            if(data.error)temp[id].rej(data.error)
+                            else temp[id].res(data.data.response.data)
+                        }
+                    } 
+                });
+                var joinGame= async function ()
+                {
+                    let newModel= await callApiSocket('game','join',{id:document.getElementById('codeinput').value})
+                    reloadGame(newModel) 
+                    reloadElements()
+                    callApiSocket('game','listen',{},(data)=>{
+                        let dt=data.data.response.data
+                        console.log('event:',dt.game);
+                        reloadGame(dt.game) 
+                    })
+                }
+                var createGame= async function ()
+                { 
+                    let newModel= await callApiSocket('game','createGame',{})
+                    if(newModel)
+                    {
+                        reloadGame(newModel) 
+                        reloadElements()
+                        callApiSocket('game','listen',{},(data)=>{
+                            let dt=data.data.response.data
+                            console.log('event:',dt.game);
+                            reloadGame(dt.game) 
+                        })
+                    }
+
+                }
+                var rool=async function()
+                {
+                    let newModel= await callApiSocket('game','rool',{  })
+                    
+                }
+                var ignore=async function()
+                {
+                    let newModel= await callApiSocket('game','ignore',{  })
+                    
+                }
+                var stop=async function()
+                {
+                    let newModel= await callApiSocket('game','stopTurn',{  })
+                    
+                }
+                var select=async function()
+                {
+                    if(selectedDice.length==2)
+                    {
+                        let newModel= await callApiSocket('game','select',{
+                            dice0:selectedDice[0],
+                            dice1:selectedDice[1]
+                          })
+                          selectedDice=[]
+                        for(let i=0;i<4;i++)
+                        {
+                             document.getElementById('dicebtn'+i).style.backgroundColor= '' 
+                        }
+                    }   
+                    
+                }
+                var selectDice= async function (index)
+                {
+                    if(selectedDice.indexOf(index)>-1)return 
+                    if(selectedDice.length>1)
+                    {
+                        selectedDice.splice(0,1)
+                    }
+                    selectedDice.push(index)
+                    for(let i=0;i<4;i++)
+                    {
+                        if(selectedDice.indexOf(i)>-1)
+                        {
+                            document.getElementById('dicebtn'+i).style.backgroundColor= 'green'
+                        }
+                        else
+                        {
+                            document.getElementById('dicebtn'+i).style.backgroundColor= ''
+                        }
+                    }
+                }
+                var startGame= async function ()
+                { 
+                    let newModel= await callApiSocket('game','startGame',{id:game._id })
+                    if(newModel)
+                    {
+                        reloadGame(newModel) 
+                        reloadElements()
+                        callApiSocket('game','listen',{},(data)=>{
+                            console.log('event:',data);
+                        })
+                    }
+                }
+            }
         </script>
     </body>
 </html>

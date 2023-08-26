@@ -12,7 +12,7 @@ export default class GameModel
     dices:number[]=[];
     state:GameState=GameState.Waiting;
     timeout:number;
-    locks:number[];
+    locks:number[]=[];
     constructor(data:any)
     {
         Object.assign(this,data);

@@ -159,11 +159,18 @@ export default class GameManager
         let game=this.getGame(userid)
         if(!game)return false;
         if(game.dices.length!=2)return false;
-        if(game.players[game.turn].meeples.length<3)
+        let meeples=game.players[game.turn].meeples
+        if(meeples.length<3)
         {
             let sum=game.dices[0]+game.dices[1]
+            
             if(!game.locks || game.locks.indexOf(sum)==-1 )
-                return false;
+            {
+                let existMeeple= meeples.filter(p=>p.index==sum)[0];
+                let max=this.board.get(sum);
+                if(!existMeeple || existMeeple.value<max)
+                    return false;
+            }
         }
         game.dices=[]
         game.timeout=this.getTimeout();

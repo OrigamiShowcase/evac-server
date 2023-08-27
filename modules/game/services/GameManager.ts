@@ -159,7 +159,12 @@ export default class GameManager
         let game=this.getGame(userid)
         if(!game)return false;
         if(game.dices.length!=2)return false;
-        if(game.players[game.turn].meeples.length<3)return false;
+        if(game.players[game.turn].meeples.length<3)
+        {
+            let sum=game.dices[0]+game.dices[1]
+            if(!game.locks || game.locks.indexOf(sum)==-1 )
+                return false;
+        }
         game.dices=[]
         game.timeout=this.getTimeout();
         this.saveGame(game);

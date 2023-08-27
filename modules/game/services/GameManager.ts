@@ -86,7 +86,10 @@ export default class GameManager
                         let sum= game.dices[i]+game.dices[j];
                         if(palyer.meeples.filter(p=>p.index==sum)[0])
                         {
-                            canplay=true
+                            if(!game.locks || game.locks.indexOf(sum)==-1)
+                            {
+                                canplay=true
+                            }
                         }
                     }
                 }
@@ -95,10 +98,10 @@ export default class GameManager
             {
                 game.state=GameState.TurnChanging;
                 setTimeout(()=>{
+                    game.players[game.turn].meeples=[]
                     game.turn++;
                     if(game.turn>=game.players.length)game.turn=0;
                     game.dices=[]
-                    game.players[game.turn].meeples=[]
                     this.saveGame(game);
                     game.sendMessage(ResponseType.Turn)
                     game.state=GameState.Playing;

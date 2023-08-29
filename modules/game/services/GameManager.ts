@@ -97,7 +97,10 @@ export default class GameManager
                         }
                         else
                         {
-                            canplay=true;
+                            if(palyer.meeples.length<3)
+                            {
+                                canplay=true;
+                            }
                         }
 
                     } 

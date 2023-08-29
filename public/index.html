@@ -250,7 +250,7 @@
                     xhttp.onload = function() { 
                         if(this.status==403)
                         {
-                            window.localStorage.setItem('token','')
+                            //window.localStorage.setItem('token','')
                             rej(this.responseText)
                         }
                         if(this.responseText)

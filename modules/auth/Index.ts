@@ -1,10 +1,11 @@
 import { DataInput, EventInput, ModuleConfig, OriInjectable, OriService, PackageIndex, ResponseDataModel, RouteResponse, SessionInput } from "@origamicore/core";
 import AuthConfig from "./models/AuthConfig";
 import SessionModel from "../common/models/SessionModel";
-import ResponseMessage from "../common/models/response/ResponseMessage";
-import { WebService } from "@origamicore/base";
-import EnvModel from "../common/models/EnvModel";
-
+import DbSchemas from "../common/DbSchemas";
+import StaticResponse from "../common/StaticResponse";
+import { GoogleOauthRouter } from "@origamicore/google-auth";
+import ProfileModel from "./models/ProfileModel";
+const uuid=require('uuid')
 @OriInjectable({domain:'auth'})
 export default class AuthService implements PackageIndex
 {
@@ -25,40 +26,55 @@ export default class AuthService implements PackageIndex
     }
     
     @OriService()
-    async isLogin(@SessionInput session:SessionModel):Promise<any>
+    async requestLogin(@SessionInput session:SessionModel)
+    {
+        let id=uuid.v4();
+        await DbSchemas.redis.setValue(id,session.userid);
+        await DbSchemas.redis.expire(id,120);
+        return id;
+    }
+    @OriService()
+    async isLogin(@SessionInput session:SessionModel)
     {
         return session;
     }
-    
     @OriService({isPublic:true})
-    async requestLoginToken():Promise<any>
+    async loginByToken(id:string,projectId:string)
     {
-        var request:any =await WebService.get(EnvModel.ajorLoginUrl,
+        let userid=await DbSchemas.redis.getValue(id);
+        if(!userid)
         {
-            name:process.env.AJOR_NAME,
-            key:process.env.AJOR_KEY
-        },null,null)
-        return request.data;
+            return StaticResponse.tokenNotFound;
+        }
+        return new RouteResponse({
+            session:new SessionModel({
+                userid:userid,
+                projectId
+            })
+        })
     }
-
     @OriService({isPublic:true})
-    async loginByAjor(id:string):Promise<any> 
-    { 
-        var request:any =await WebService.get(EnvModel.ajorUrl,
+    async login(id:string)
+    {
+        let gprofile = await GoogleOauthRouter.verifyById(id);
+        let profile = await DbSchemas.profile.findById(gprofile.id);
+        if(!profile)
         {
-            name:EnvModel.ajorName,
-            key:EnvModel.ajorKey,
-            id
-        },null,null);        
-        var accountData=request.data; 
-        if(!accountData.account) throw 'access'
-        return  new RouteResponse({
-            session: {
-                'userid':accountData.account
-            },
-            response:new ResponseDataModel()
-        });
-
-    
+            profile=new ProfileModel({
+                _id:gprofile.id,
+                avatar:gprofile.picture,
+                email:gprofile.email,
+                firstName:gprofile.family_name,
+                lastName:gprofile.family_name,
+                status:1,
+                username:''
+            });
+            await DbSchemas.profile.saveById(profile)
+        }
+        return new RouteResponse({
+            session:new SessionModel({
+                userid:profile._id
+            })
+        })
     }
 }

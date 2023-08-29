@@ -2,7 +2,7 @@
     <body>
         <div id="logindiv">
             <button onclick="login()">
-                Login By Ajor
+                Login By Google
             </button>
         </div>
         <div id="gamediv"> 
@@ -255,7 +255,7 @@
                         }
                         if(this.responseText)
                         {
-                            var resp=JSON.parse(this.responseText)
+                            var resp=JSON.parse(this.responseText) 
                             if(resp.token)
                             {
                                 window.localStorage.setItem('token',resp.token)
@@ -272,20 +272,31 @@
                 })
             }
             reloadElements()
-            
-            async function stayLogin(loginId)
-            {   
-                let id= await callApi('https://vaapi.ajor.io/api/stayToLogin?loginId='+loginId)  
-                 await callApi('/auth/loginByAjor?id='+id)  
-                 window.location.reload()
+             
+            function getQueryParams(url) {
+                const paramArr = url.slice(url.indexOf('?') + 1).split('&');
+                const params = {};
+                paramArr.map(param => {
+                    const [key, val] = param.split('=');
+                    params[key] = decodeURIComponent(val);
+                })
+                return params;
+            }
+            async function loginWithOauth()
+            {
+                let tokenData= await callApi('/auth/login?id='+queryParams.oauttoken); 
+                window.location.href='/'
+            }
+            let queryParams=getQueryParams(window.location.href)
+            if(queryParams && queryParams.oauttoken)
+            {
+                loginWithOauth()
             }
             async function login()
             {
 
-                let loginId = await callApi('/auth/requestLoginToken') 
-                stayLogin(loginId)
-                await callApi('https://vaapi.ajor.io/api/stayToLoginSubmit?loginId='+loginId) 
-                window.open('https://ajor.io/tva-login?id='+loginId)
+                let url = await callApi('/goauth/getOauthUrl')   
+                window.open(url)
             }
             async function loadProfile()
             {

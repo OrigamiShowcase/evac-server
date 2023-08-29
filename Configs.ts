@@ -7,6 +7,7 @@ import { ConnectionEvent, ConnectionEventType, ConnectionProtocol, EndpointConfi
 import fs from 'fs'
 import GameConfig from "./modules/game/models/GameConfig";
 import AuthConfig from "./modules/auth/models/AuthConfig";
+import { GoogleOauthConfig } from "@origamicore/google-auth";
 let mongoContext='default';
 let redisContext='default'
 export default new ConfigModel({
@@ -26,6 +27,14 @@ export default new ConfigModel({
                }),] 
            ])
         }),
+        
+        new GoogleOauthConfig({
+            redisContext,
+            clientId:EnvModel.googleClientId,
+            clientSecret:EnvModel.googleClientSecret,
+            frontRedirectUrl:EnvModel.frontRedirect,
+            redirectUrl:EnvModel.GoogleRedirect
+         }), 
         new GameConfig({dbContext:mongoContext,redisContext}),
         new AuthConfig({dbContext:mongoContext,redisContext}),
         new EndpointConfig({

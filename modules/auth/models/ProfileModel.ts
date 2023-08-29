@@ -5,9 +5,9 @@ export default class ProfileModel extends IOriModel
     _id:string;
     @OriProps({  title:'Username',minLength:4,maxLength:20})
     username:string;
-    @OriProps({isRequired:true, title:'First Name',minLength:4,maxLength:20})
+    @OriProps({isRequired:true, title:'First Name',minLength:1,maxLength:20})
     firstName:string;
-    @OriProps({isRequired:true, title:'Last Name',minLength:4,maxLength:20})
+    @OriProps({isRequired:true, title:'Last Name',maxLength:20})
     lastName:string;
     avatar:string;
     status:number;

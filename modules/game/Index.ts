@@ -76,12 +76,16 @@ export default class GameService implements PackageIndex
         let game=GameManager.games.get(id);
         if(!game)
         {
-            throw "not found"
+            game=await DbSchemas.games.findById(id)
+            if(!game)
+                throw "not found" 
+            if(game.players[0].userid!=session.userid)
+                throw 'Access'
+            await DbSchemas.games.findByIdAndDelete(game._id);
+            return
         }
         if(game.players[0].userid!=session.userid)
-        {
-            console.log(game.players[0].userid,session.userid);
-            
+        { 
             throw 'Access'
         } 
         GameManager.RemoveGame(game)

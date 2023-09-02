@@ -8,7 +8,8 @@ import PlayerModel from "./models/PlayerModel";
 import { GameState } from "./models/GameState";
 import ConnectionManager from "./services/ConnectionManager";
 import GameManager from "./services/GameManager";
-const uuid=require('uuid');
+import Manager from "../common/Manager";
+const uuid=require('uuid'); 
 @OriInjectable({domain:'game'})
 export default class GameService implements PackageIndex
 {
@@ -70,6 +71,15 @@ export default class GameService implements PackageIndex
         return await GameManager.select(session.userid,[dice0,dice1]);
     }
     @OriService({})
+    async remove(@SessionInput session:SessionModel,id:string)
+    {
+        let game=GameManager.games.get(id);
+        if(game && game.players[0].userid==session.userid)
+        {
+            GameManager.RemoveGame(game)
+        } 
+    }
+    @OriService({})
     async startGame(@SessionInput session:SessionModel,id:string)
     {
         let game=await DbSchemas.games.findById(id);
@@ -124,11 +134,11 @@ export default class GameService implements PackageIndex
     @OriService({isEvent:true})
     async listen(@SessionInput session:SessionModel,@EventInput event:(data:ResponseMessage)=>void)
     {
-        ConnectionManager.push(session.userid,event);
+        Manager.evac.push(session.userid,event);
     }
     @OriService({isInternal:true})
     async closeSession(@SessionInput session:SessionModel)
     {   
-        ConnectionManager.remove(session.userid);
+        Manager.evac.remove(session.userid);
     }
 }

@@ -74,7 +74,7 @@ export default new ConfigModel({
                         }),
                     ],
                     cors:['*'],
-                    type:EndpointConnectionType.Soucket
+                    type:EndpointConnectionType.Socket
                 })
             ]
          })

@@ -120,42 +120,7 @@ export default class GameManager
                 game.state=GameState.Playing;
             },5000)
         }
-
-        
-        // if(palyer.meeples.length>=3)
-        // {
-        //     let canplay=false;
-        //     for(let i=0;i<4;i++)
-        //     {
-        //         for(let j=0;j<4;j++)
-        //         {
-        //             if(i!=j)
-        //             {
-        //                 let sum= game.dices[i]+game.dices[j];
-        //                 if(palyer.meeples.filter(p=>p.index==sum)[0])
-        //                 {
-        //                     if(!game.locks || game.locks.indexOf(sum)==-1)
-        //                     {
-        //                         canplay=true
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     if(!canplay)
-        //     {
-        //         game.state=GameState.TurnChanging;
-        //         setTimeout(()=>{
-        //             game.players[game.turn].meeples=[]
-        //             game.turn++;
-        //             if(game.turn>=game.players.length)game.turn=0;
-        //             game.dices=[]
-        //             this.saveGame(game);
-        //             game.sendMessage(ResponseType.Turn)
-        //             game.state=GameState.Playing;
-        //         },5000)
-        //     }
-        // }
+ 
         this.saveGame(game);
         game.sendMessage(ResponseType.Rool)
     }

@@ -2,16 +2,16 @@ import ResponseMessage from "../../common/models/response/ResponseMessage";
 
 export default class ConnectionManager
 {
-    static connections:Map<string,(data:ResponseMessage)=>void> =new Map<string,(data:ResponseMessage)=>void>();
-    static push(userid:string ,connection:(data:ResponseMessage)=>void)
+    connections:Map<string,(data:ResponseMessage)=>void> =new Map<string,(data:ResponseMessage)=>void>();
+    push(userid:string ,connection:(data:ResponseMessage)=>void)
     {
         this.connections.set(userid,connection);
     }
-    static remove(userid:string)
+    remove(userid:string)
     {
         this.connections.delete(userid);
     }
-    static sendMessage(userid:string,message:ResponseMessage)
+    sendMessage(userid:string,message:any)
     {
         if(this.connections.has(userid))
         {

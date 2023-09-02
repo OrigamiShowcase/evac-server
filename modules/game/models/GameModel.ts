@@ -3,6 +3,7 @@ import ConnectionManager from "../services/ConnectionManager";
 import { GameState } from "./GameState";
 import PlayerModel from "./PlayerModel";
 import { ResponseType } from "../../common/models/response/ResponseType";
+import Manager from "../../common/Manager";
 
 export default class GameModel
 {
@@ -21,7 +22,7 @@ export default class GameModel
     {
         for(let player of this.players)
         {
-            ConnectionManager.sendMessage(player.userid,new ResponseMessage({type,game:this}))
+            Manager.evac.sendMessage(player.userid,new ResponseMessage({type,game:this}))
         }
     }
 }

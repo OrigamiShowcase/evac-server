@@ -6,7 +6,7 @@
     "dependencies": {
         "@origamicore/base": "^0.1.0",
         "@origamicore/core": "^4.1.5",
-        "@origamicore/endpoint": "^1.0.7",
+        "@origamicore/endpoint": "^1.0.8",
         "@origamicore/google-auth": "^0.1.2",
         "@origamicore/mongo": "^1.0.0",
         "@origamicore/redis": "^1.0.0",

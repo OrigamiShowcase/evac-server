@@ -74,10 +74,17 @@ export default class GameService implements PackageIndex
     async remove(@SessionInput session:SessionModel,id:string)
     {
         let game=GameManager.games.get(id);
-        if(game && game.players[0].userid==session.userid)
+        if(!game)
         {
-            GameManager.RemoveGame(game)
+            throw "not found"
+        }
+        if(game.players[0].userid!=session.userid)
+        {
+            console.log(game.players[0].userid,session.userid);
+            
+            throw 'Access'
         } 
+        GameManager.RemoveGame(game)
     }
     @OriService({})
     async startGame(@SessionInput session:SessionModel,id:string)

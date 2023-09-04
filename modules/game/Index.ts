@@ -9,6 +9,7 @@ import { GameState } from "./models/GameState";
 import ConnectionManager from "./services/ConnectionManager";
 import GameManager from "./services/GameManager";
 import Manager from "../common/Manager";
+import { ResponseType } from "../common/models/response/ResponseType";
 const uuid=require('uuid'); 
 @OriInjectable({domain:'game'})
 export default class GameService implements PackageIndex
@@ -121,6 +122,7 @@ export default class GameService implements PackageIndex
         {
             return
         }
+        existGame.sendMessage(ResponseType.Join);
         game.players.push(new PlayerModel({userid:session.userid}))
         await DbSchemas.games.saveById(game);
         return game;

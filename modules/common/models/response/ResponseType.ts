@@ -6,4 +6,5 @@ export enum ResponseType
     Ignore=4,
     Turn=5,
     Finished=6,
+    Join=7
 }

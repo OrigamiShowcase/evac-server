@@ -122,7 +122,7 @@ export default class GameService implements PackageIndex
         {
             return
         }
-        existGame.sendMessage(ResponseType.Join);
+        game.sendMessage(ResponseType.Join);
         game.players.push(new PlayerModel({userid:session.userid}))
         await DbSchemas.games.saveById(game);
         return game;
